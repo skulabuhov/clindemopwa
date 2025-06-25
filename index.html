@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clinic PWA Demo</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap">
+    <style>
+        body{font-family:'Roboto',sans-serif;margin:0;background:#f4f4f4;color:#333;display:flex;justify-content:center;align-items:center;min-height:100vh}
+        .container{background:#fff;padding:20px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.1);width:300px}
+        h1{text-align:center;font-size:1.4em;margin-bottom:20px}
+        button{font-size:1em;padding:10px 20px;margin:5px;width:100%;border:none;border-radius:4px;cursor:pointer}
+        button.primary{background:#6200ee;color:#fff}
+        button.secondary{background:#f5f5f5}
+        .hidden{display:none}
+        ul{list-style:none;padding:0;margin-top:15px}
+        li{margin-bottom:10px}
+        audio{width:100%}
+        .status{font-size:0.8em;color:#666}
+    </style>
+</head>
+<body>
+<div class="container">
+    <div id="login">
+        <h1>Вход</h1>
+        <input type="text" id="loginUser" placeholder="Логин" style="width:100%;padding:8px;margin-bottom:10px">
+        <input type="password" id="loginPass" placeholder="Пароль" style="width:100%;padding:8px;margin-bottom:10px">
+        <button id="loginBtn" class="primary">Войти</button>
+    </div>
+    <div id="session" class="hidden">
+        <button id="startBtn" class="primary">Начать прием</button>
+        <div id="controls" class="hidden">
+            <button id="recordBtn" class="primary">Запись</button>
+            <button id="finishBtn" class="secondary">Закончить прием</button>
+            <ul id="recordings"></ul>
+        </div>
+    </div>
+</div>
+<script>
+const loginEl=document.getElementById('login');
+const sessionEl=document.getElementById('session');
+const loginBtn=document.getElementById('loginBtn');
+const startBtn=document.getElementById('startBtn');
+const controls=document.getElementById('controls');
+const recordBtn=document.getElementById('recordBtn');
+const finishBtn=document.getElementById('finishBtn');
+const recordingsList=document.getElementById('recordings');
+let token=null,sessionId=null,recorder=null,chunks=[],audioCount=0,isRecording=false,holdTimer=null;
+loginBtn.onclick=()=>{token='fake-jwt-token';loginEl.classList.add('hidden');sessionEl.classList.remove('hidden');};
+startBtn.onclick=()=>{sessionId=crypto.randomUUID();startBtn.classList.add('hidden');controls.classList.remove('hidden');};
+function startRecording(){navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{recorder=new MediaRecorder(stream);recorder.ondataavailable=e=>{chunks.push(e.data);};recorder.onstop=()=>{const blob=new Blob(chunks,{type:'audio/webm'});chunks=[];addRecording(blob);};recorder.start();isRecording=true;recordBtn.textContent='Стоп';}).catch(()=>alert('Нет доступа к микрофону'));}
+function stopRecording(){if(recorder){recorder.stop();isRecording=false;recordBtn.textContent='Запись';}}
+function addRecording(blob){const id=++audioCount;const li=document.createElement('li');const audio=document.createElement('audio');audio.controls=true;audio.src=URL.createObjectURL(blob);const status=document.createElement('span');status.className='status';status.textContent='отправка...';li.appendChild(audio);li.appendChild(status);recordingsList.appendChild(li);sendAudio(id,blob,status);}
+function sendAudio(id,blob,statusEl){setTimeout(()=>{statusEl.textContent='отправлено';},1000);}
+finishBtn.onclick=()=>{controls.classList.add('hidden');startBtn.classList.remove('hidden');recordingsList.innerHTML='';alert('Прием завершен');};
+recordBtn.addEventListener('pointerdown',e=>{holdTimer=setTimeout(()=>{startRecording();recordBtn.dataset.mode='hold';},200);});
+recordBtn.addEventListener('pointerup',e=>{clearTimeout(holdTimer);if(recordBtn.dataset.mode==='hold'){if(isRecording)stopRecording();recordBtn.dataset.mode='';}else{if(!isRecording)startRecording();else stopRecording();}});
+const manifest={"name":"Clinic PWA Demo","short_name":"Clinic","start_url":"./","display":"standalone","theme_color":"#6200ee","background_color":"#ffffff","icons":[{"src":"https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f3e5.svg","sizes":"192x192","type":"image/svg+xml"}]};
+const manifestBlob=new Blob([JSON.stringify(manifest)],{type:'application/json'});const manifestURL=URL.createObjectURL(manifestBlob);const link=document.createElement('link');link.rel='manifest';link.href=manifestURL;document.head.appendChild(link);
+if('serviceWorker'in navigator){const swBlob=new Blob([`self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open('v1').then(c=>c.addAll(['./'])));});self.addEventListener('fetch',e=>{e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)));});`],{type:'text/javascript'});const swURL=URL.createObjectURL(swBlob);navigator.serviceWorker.register(swURL);} 
+</script>
+</body>
+</html>
