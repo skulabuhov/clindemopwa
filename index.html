@@ -12,6 +12,7 @@
         button{font-size:1em;padding:10px 20px;margin:5px;width:100%;border:none;border-radius:4px;cursor:pointer}
         button.primary{background:#6200ee;color:#fff}
         button.secondary{background:#f5f5f5}
+        #login input,#login button{width:100%;padding:8px;margin:10px 0;box-sizing:border-box}
         .hidden{display:none}
         ul{list-style:none;padding:0;margin-top:15px}
         li{margin-bottom:10px}
@@ -23,9 +24,11 @@
 <div class="container">
     <div id="login">
         <h1>Вход</h1>
-        <input type="text" id="loginUser" placeholder="Логин" style="width:100%;padding:8px;margin-bottom:10px">
-        <input type="password" id="loginPass" placeholder="Пароль" style="width:100%;padding:8px;margin-bottom:10px">
-        <button id="loginBtn" class="primary">Войти</button>
+        <form id="loginForm">
+            <input type="text" id="loginUser" placeholder="Логин" required>
+            <input type="password" id="loginPass" placeholder="Пароль" required>
+            <button id="loginBtn" type="submit" class="primary">Войти</button>
+        </form>
     </div>
     <div id="session" class="hidden">
         <button id="startBtn" class="primary">Начать прием</button>
@@ -39,14 +42,22 @@
 <script>
 const loginEl=document.getElementById('login');
 const sessionEl=document.getElementById('session');
+const loginForm=document.getElementById('loginForm');
 const loginBtn=document.getElementById('loginBtn');
+const loginUser=document.getElementById('loginUser');
+const loginPass=document.getElementById('loginPass');
 const startBtn=document.getElementById('startBtn');
 const controls=document.getElementById('controls');
 const recordBtn=document.getElementById('recordBtn');
 const finishBtn=document.getElementById('finishBtn');
 const recordingsList=document.getElementById('recordings');
 let token=null,sessionId=null,recorder=null,chunks=[],audioCount=0,isRecording=false,holdTimer=null;
-loginBtn.onclick=()=>{token='fake-jwt-token';loginEl.classList.add('hidden');sessionEl.classList.remove('hidden');};
+loginForm.onsubmit=e=>{e.preventDefault();
+    if(!loginUser.value.trim()||!loginPass.value.trim())return;
+    token='fake-jwt-token';
+    loginEl.classList.add('hidden');
+    sessionEl.classList.remove('hidden');
+};
 startBtn.onclick=()=>{sessionId=crypto.randomUUID();startBtn.classList.add('hidden');controls.classList.remove('hidden');};
 function startRecording(){navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{recorder=new MediaRecorder(stream);recorder.ondataavailable=e=>{chunks.push(e.data);};recorder.onstop=()=>{const blob=new Blob(chunks,{type:'audio/webm'});chunks=[];addRecording(blob);};recorder.start();isRecording=true;recordBtn.textContent='Стоп';}).catch(()=>alert('Нет доступа к микрофону'));}
 function stopRecording(){if(recorder){recorder.stop();isRecording=false;recordBtn.textContent='Запись';}}
