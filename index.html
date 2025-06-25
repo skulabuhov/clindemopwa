@@ -7,17 +7,21 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap">
     <style>
         body{font-family:'Roboto',sans-serif;margin:0;background:#f4f4f4;color:#333;display:flex;justify-content:center;align-items:center;min-height:100vh}
+        body.logged-in{align-items:flex-start;padding-top:20px}
         .container{background:#fff;padding:20px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.1);width:300px}
+        body.logged-in .container{display:flex;flex-direction:column;height:calc(100vh - 40px)}
         h1{text-align:center;font-size:1.4em;margin-bottom:20px}
         button{font-size:1em;padding:10px 20px;margin:5px;width:100%;border:none;border-radius:4px;cursor:pointer}
         button.primary{background:#6200ee;color:#fff}
         button.secondary{background:#f5f5f5}
         #login input,#login button{width:100%;padding:8px;margin:10px 0;box-sizing:border-box}
         .hidden{display:none}
-        ul{list-style:none;padding:0;margin-top:15px}
+        ul{list-style:none;padding:0;margin-top:15px;overflow-y:auto;flex:1}
         li{margin-bottom:10px}
         audio{width:100%}
         .status{font-size:0.8em;color:#666}
+        #controls{position:sticky;top:0;background:#fff;z-index:1}
+        .meta{font-size:0.9em;margin-bottom:4px;color:#444}
     </style>
 </head>
 <body>
@@ -57,11 +61,12 @@ loginForm.onsubmit=e=>{e.preventDefault();
     token='fake-jwt-token';
     loginEl.classList.add('hidden');
     sessionEl.classList.remove('hidden');
+    document.body.classList.add('logged-in');
 };
-startBtn.onclick=()=>{sessionId=crypto.randomUUID();startBtn.classList.add('hidden');controls.classList.remove('hidden');};
+startBtn.onclick=()=>{sessionId=crypto.randomUUID();startBtn.classList.add('hidden');controls.classList.remove('hidden');audioCount=0;recordingsList.innerHTML='';};
 function startRecording(){navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{recorder=new MediaRecorder(stream);recorder.ondataavailable=e=>{chunks.push(e.data);};recorder.onstop=()=>{const blob=new Blob(chunks,{type:'audio/webm'});chunks=[];addRecording(blob);};recorder.start();isRecording=true;recordBtn.textContent='Стоп';}).catch(()=>alert('Нет доступа к микрофону'));}
 function stopRecording(){if(recorder){recorder.stop();isRecording=false;recordBtn.textContent='Запись';}}
-function addRecording(blob){const id=++audioCount;const li=document.createElement('li');const audio=document.createElement('audio');audio.controls=true;audio.src=URL.createObjectURL(blob);const status=document.createElement('span');status.className='status';status.textContent='отправка...';li.appendChild(audio);li.appendChild(status);recordingsList.appendChild(li);sendAudio(id,blob,status);}
+function addRecording(blob){const id=++audioCount;const li=document.createElement('li');const meta=document.createElement('div');meta.className='meta';meta.textContent=`${id}. ${new Date().toLocaleTimeString()}`;const audio=document.createElement('audio');audio.controls=true;audio.src=URL.createObjectURL(blob);const status=document.createElement('span');status.className='status';status.textContent='отправка...';li.appendChild(meta);li.appendChild(audio);li.appendChild(status);recordingsList.prepend(li);sendAudio(id,blob,status);}
 function sendAudio(id,blob,statusEl){setTimeout(()=>{statusEl.textContent='отправлено';},1000);}
 finishBtn.onclick=()=>{controls.classList.add('hidden');startBtn.classList.remove('hidden');recordingsList.innerHTML='';alert('Прием завершен');};
 recordBtn.addEventListener('pointerdown',e=>{
