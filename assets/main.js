@@ -110,5 +110,5 @@ recordBtn.addEventListener('pointerup',e=>{
     }
 });
 if('serviceWorker' in navigator && location.protocol.startsWith('http')){
-    navigator.serviceWorker.register('/sw.js');
+    navigator.serviceWorker.register('./sw.js');
 }
