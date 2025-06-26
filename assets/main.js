@@ -12,7 +12,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const createBtn = document.getElementById('createBtn');
   const appointmentsEl = document.getElementById('appointments');
   const appointmentEl = document.getElementById('appointment');
-  const appointmentTitle = document.getElementById('appointmentTitle');
   const backBtn = document.getElementById('backBtn');
   const finishBtn = document.getElementById('finishBtn');
   const controls = document.getElementById('controls');
@@ -98,13 +97,14 @@ createBtn.onclick = async () => {
 backBtn.onclick = () => {
   appointmentEl.classList.add('hidden');
   appointmentsEl.classList.remove('hidden');
+  createBtn.classList.remove('hidden');
   fetchAppointments();
 };
 
 async function openAppointment(id, status) {
   currentAppointment = id;
   currentStatus = status;
-  appointmentTitle.textContent = `Прием ${id.slice(0, 8)}`;
+  createBtn.classList.add('hidden');
   appointmentsEl.classList.add('hidden');
   appointmentEl.classList.remove('hidden');
   finishBtn.classList.toggle('hidden', status === 'finished');
@@ -204,24 +204,29 @@ function addExisting(f) {
   const li = document.createElement('li');
   const meta = document.createElement('div');
   meta.className = 'meta';
-  meta.textContent = `${f.audio_id}. ${new Date(f.created_at).toLocaleTimeString()}`;
+  const time = document.createElement('span');
+  time.textContent = `${f.audio_id}. ${new Date(f.created_at).toLocaleTimeString()}`;
+  meta.appendChild(time);
   const txt = document.createElement('button');
   txt.className = 'text-btn';
   txt.textContent = '📝';
   txt.onclick = () => alert(f.transcript || '');
   meta.appendChild(txt);
+  if (currentStatus !== 'finished') {
+    const spacer = document.createElement('span');
+    spacer.className = 'spacer';
+    meta.appendChild(spacer);
+    const del = document.createElement('button');
+    del.className = 'text-btn';
+    del.textContent = '✖';
+    del.onclick = () => deleteAudio(f.audio_id, li);
+    meta.appendChild(del);
+  }
   li.appendChild(meta);
   const audio = document.createElement('audio');
   audio.controls = true;
   audio.src = `${API_URL}/api/v1/appointments/audio/get?appointment_id=${currentAppointment}&audio_id=${f.audio_id}`;
   li.appendChild(audio);
-  if (currentStatus !== 'finished') {
-    const del = document.createElement('button');
-    del.className = 'text-btn';
-    del.textContent = '✖';
-    del.onclick = () => deleteAudio(f.audio_id, li);
-    li.appendChild(del);
-  }
   recordingsList.appendChild(li);
 }
 
