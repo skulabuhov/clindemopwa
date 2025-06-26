@@ -1,22 +1,23 @@
 const API_URL = 'http://localhost:8010';
 
-const loginEl = document.getElementById('login');
-const appEl = document.getElementById('app');
-const loginForm = document.getElementById('loginForm');
-const loginBtn = document.getElementById('loginBtn');
-const loginUser = document.getElementById('loginUser');
-const loginPass = document.getElementById('loginPass');
-const usernameEl = document.getElementById('username');
-const logoutBtn = document.getElementById('logoutBtn');
-const createBtn = document.getElementById('createBtn');
-const appointmentsEl = document.getElementById('appointments');
-const appointmentEl = document.getElementById('appointment');
-const appointmentTitle = document.getElementById('appointmentTitle');
-const backBtn = document.getElementById('backBtn');
-const finishBtn = document.getElementById('finishBtn');
-const controls = document.getElementById('controls');
-const recordBtn = document.getElementById('recordBtn');
-const recordingsList = document.getElementById('recordings');
+document.addEventListener('DOMContentLoaded', () => {
+  const loginEl = document.getElementById('login');
+  const appEl = document.getElementById('app');
+  const loginForm = document.getElementById('loginForm');
+  const loginBtn = document.getElementById('loginBtn');
+  const loginUser = document.getElementById('loginUser');
+  const loginPass = document.getElementById('loginPass');
+  const usernameEl = document.getElementById('username');
+  const logoutBtn = document.getElementById('logoutBtn');
+  const createBtn = document.getElementById('createBtn');
+  const appointmentsEl = document.getElementById('appointments');
+  const appointmentEl = document.getElementById('appointment');
+  const appointmentTitle = document.getElementById('appointmentTitle');
+  const backBtn = document.getElementById('backBtn');
+  const finishBtn = document.getElementById('finishBtn');
+  const controls = document.getElementById('controls');
+  const recordBtn = document.getElementById('recordBtn');
+  const recordingsList = document.getElementById('recordings');
 
 let token = null;
 let currentUser = null;
@@ -236,3 +237,5 @@ async function deleteAudio(id, el) {
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
   navigator.serviceWorker.register('./sw.js');
 }
+
+});
