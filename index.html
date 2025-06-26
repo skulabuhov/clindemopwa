@@ -20,11 +20,22 @@
             <button id="loginBtn" type="submit" class="primary">Войти</button>
         </form>
     </div>
-    <div id="session" class="hidden">
-        <button id="startBtn" class="primary">Начать прием</button>
-        <div id="controls" class="hidden">
-            <button id="recordBtn" class="primary">Запись</button>
-            <button id="finishBtn" class="secondary">Закончить прием</button>
+    <div id="app" class="hidden">
+        <header>
+            <span id="username"></span>
+            <button id="logoutBtn" class="secondary">Выход</button>
+        </header>
+        <div id="menu">
+            <button id="createBtn" class="primary">Новый прием</button>
+        </div>
+        <div id="appointments"></div>
+        <div id="appointment" class="hidden">
+            <button id="backBtn" class="secondary">Назад</button>
+            <h2 id="appointmentTitle"></h2>
+            <button id="finishBtn" class="secondary hidden">Завершить прием</button>
+            <div id="controls" class="hidden">
+                <button id="recordBtn" class="primary record-btn">Запись</button>
+            </div>
             <ul id="recordings"></ul>
         </div>
     </div>
