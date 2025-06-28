@@ -1,7 +1,7 @@
 body{font-family:'Roboto',sans-serif;margin:0;background:#f4f4f4;color:#333;display:flex;justify-content:center;align-items:center;min-height:100vh}
-body.logged-in{align-items:flex-start;padding-top:20px}
+body.logged-in{align-items:flex-start;padding-top:20px;height:100vh;overflow:hidden}
 .container{background:#fff;padding:20px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.1);width:300px}
-body.logged-in .container{display:flex;flex-direction:column;height:calc(100vh - 40px)}
+body.logged-in .container{display:flex;flex-direction:column;height:calc(100vh - 60px)}
 h1{text-align:center;font-size:1.4em;margin-bottom:20px}
 button{font-size:1em;padding:10px 20px;margin:5px;width:100%;border:none;border-radius:4px;cursor:pointer}
 button.primary{background:#6200ee;color:#fff}
@@ -13,7 +13,9 @@ header button{width:auto;margin:0;padding:5px 10px}
 .meta{font-size:1em;margin-bottom:4px;color:#444;display:flex;align-items:center;flex-wrap:nowrap}
 .meta span:first-child{font-weight:500;margin-right:6px;white-space:nowrap}
 .meta .spacer{flex:1}
+.meta button{width:auto;margin-left:5px;padding:5px 10px;font-size:.9em}
 button.text-btn{background:none;border:none;cursor:pointer;padding:0 5px;font-size:1.3em}
+button.danger{background:#e53935;color:#fff}
 button.record-btn{font-size:1.2em;padding:20px}
 ul{list-style:none;padding:0;margin-top:15px;overflow-y:auto;flex:1}
 li{margin-bottom:10px}
