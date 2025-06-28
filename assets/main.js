@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:8010';
+const API_URL = 'https://cdemo.fatdog.pro';
 
 document.addEventListener('DOMContentLoaded', () => {
   const loginEl = document.getElementById('login');
