@@ -258,8 +258,8 @@ function addExisting(f) {
   time.textContent = `${f.audio_id}. ${new Date(f.created_at).toLocaleTimeString()}`;
   meta.appendChild(time);
   const txt = document.createElement('button');
-  txt.className = 'text-btn';
-  txt.textContent = '📝';
+  txt.className = 'secondary';
+  txt.textContent = 'текст';
   txt.onclick = () => alert(f.transcript || '');
   meta.appendChild(txt);
   if (currentStatus !== 'finished') {
@@ -267,8 +267,8 @@ function addExisting(f) {
     spacer.className = 'spacer';
     meta.appendChild(spacer);
     const del = document.createElement('button');
-    del.className = 'text-btn';
-    del.textContent = '✖';
+    del.className = 'danger';
+    del.textContent = 'удалить';
     del.onclick = () => deleteAudio(f.audio_id, li);
     meta.appendChild(del);
   }
