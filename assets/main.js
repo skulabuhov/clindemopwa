@@ -120,11 +120,11 @@ async function fetchAppointments() {
     if (!r.ok) return;
     const d = await r.json();
     d.appointments.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-    d.appointments.forEach(ap => {
+    d.appointments.forEach((ap, idx) => {
       const btn = document.createElement('button');
       btn.className = 'secondary';
-      btn.textContent = `${new Date(ap.created_at).toLocaleString()} - ${translateStatus(ap.status)}`;
-      btn.onclick = () => openAppointment(ap.appointment_id, ap.status);
+      btn.textContent = `Прием ${idx + 1}: ${new Date(ap.created_at).toLocaleString()} - ${translateStatus(ap.status)}`;
+      btn.onclick = () => openAppointment(ap.appointment_id, ap.status, idx + 1);
       appointmentsEl.appendChild(btn);
     });
   } catch (e) {
@@ -153,9 +153,15 @@ backBtn.onclick = () => {
   fetchAppointments();
 };
 
-async function openAppointment(id, status) {
+async function openAppointment(id, status, number = null) {
   currentAppointment = id;
   currentStatus = status;
+  const title = document.getElementById('appointmentTitle');
+  if (number !== null) {
+    title.textContent = `Прием ${number}`;
+  } else {
+    title.textContent = '';
+  }
   createBtn.classList.add('hidden');
   appointmentsEl.classList.add('hidden');
   appointmentEl.classList.remove('hidden');
@@ -273,11 +279,6 @@ function addExisting(f) {
   const time = document.createElement('span');
   time.textContent = `${f.audio_id}. ${new Date(f.created_at).toLocaleTimeString()}`;
   meta.appendChild(time);
-  const txt = document.createElement('button');
-  txt.className = 'secondary';
-  txt.textContent = 'текст';
-  txt.onclick = () => alert(f.transcript || '');
-  meta.appendChild(txt);
   if (currentStatus !== 'finished') {
     const spacer = document.createElement('span');
     spacer.className = 'spacer';
@@ -295,6 +296,12 @@ function addExisting(f) {
     if (e.message === 'unauthorized') retryQueue.push(loadRecordings);
   });
   li.appendChild(audio);
+  if (f.transcript) {
+    const text = document.createElement('div');
+    text.className = 'transcript';
+    text.textContent = f.transcript;
+    li.appendChild(text);
+  }
   recordingsList.appendChild(li);
 }
 
