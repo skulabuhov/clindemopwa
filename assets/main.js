@@ -18,6 +18,18 @@ document.addEventListener('DOMContentLoaded', () => {
   const recordBtn = document.getElementById('recordBtn');
   const recordingsList = document.getElementById('recordings');
 
+  function translateStatus(status) {
+    switch (status) {
+      case 'pending':
+      case 'active':
+        return 'активен';
+      case 'finished':
+        return 'завершен';
+      default:
+        return status;
+    }
+  }
+
 let token = localStorage.getItem('token');
 let currentUser = localStorage.getItem('user');
 let currentAppointment = null;
@@ -108,7 +120,7 @@ async function fetchAppointments() {
     d.appointments.forEach(ap => {
       const btn = document.createElement('button');
       btn.className = 'secondary';
-      btn.textContent = `${new Date(ap.created_at).toLocaleString()} - ${ap.status}`;
+      btn.textContent = `${new Date(ap.created_at).toLocaleString()} - ${translateStatus(ap.status)}`;
       btn.onclick = () => openAppointment(ap.appointment_id, ap.status);
       appointmentsEl.appendChild(btn);
     });
