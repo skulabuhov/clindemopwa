@@ -10,10 +10,11 @@ button.secondary{background:#f5f5f5}
 .hidden{display:none}
 header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
 header button{width:auto;margin:0;padding:5px 10px}
-.meta{font-size:0.9em;margin-bottom:4px;color:#444;display:flex;align-items:center}
+.meta{font-size:1em;margin-bottom:4px;color:#444;display:flex;align-items:center;flex-wrap:nowrap}
+.meta span:first-child{font-weight:500;margin-right:6px;white-space:nowrap}
 .meta .spacer{flex:1}
+button.text-btn{background:none;border:none;cursor:pointer;padding:0 5px;font-size:1.3em}
 button.record-btn{font-size:1.2em;padding:20px}
-button.text-btn{background:none;border:none;cursor:pointer;padding:0 5px}
 ul{list-style:none;padding:0;margin-top:15px;overflow-y:auto;flex:1}
 li{margin-bottom:10px}
 audio{width:100%}

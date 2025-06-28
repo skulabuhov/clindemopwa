@@ -18,8 +18,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const recordBtn = document.getElementById('recordBtn');
   const recordingsList = document.getElementById('recordings');
 
-let token = null;
-let currentUser = null;
+let token = localStorage.getItem('token');
+let currentUser = localStorage.getItem('user');
 let currentAppointment = null;
 let currentStatus = 'pending';
 let recorder = null;
@@ -27,6 +27,40 @@ let chunks = [];
 let audioCount = 0;
 let isRecording = false;
 let holdTimer = null;
+const retryQueue = [];
+
+function showApp() {
+  loginEl.classList.add('hidden');
+  appEl.classList.remove('hidden');
+  document.body.classList.add('logged-in');
+}
+
+function showLogin() {
+  loginEl.classList.remove('hidden');
+  appEl.classList.add('hidden');
+  document.body.classList.remove('logged-in');
+}
+
+async function apiFetch(url, options = {}) {
+  options.headers = options.headers || {};
+  if (token) options.headers['Authorization'] = `Bearer ${token}`;
+  const response = await fetch(url, options);
+  if (response.status === 401) {
+    token = null;
+    currentUser = null;
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    showLogin();
+    throw new Error('unauthorized');
+  }
+  return response;
+}
+
+if (token) {
+  usernameEl.textContent = currentUser || '';
+  showApp();
+  fetchAppointments();
+}
 
 loginForm.onsubmit = async (e) => {
   e.preventDefault();
@@ -43,11 +77,14 @@ loginForm.onsubmit = async (e) => {
     const d = await r.json();
     token = d.token;
     currentUser = d.user_id;
+    localStorage.setItem('token', token);
+    localStorage.setItem('user', currentUser);
     usernameEl.textContent = currentUser;
-    loginEl.classList.add('hidden');
-    appEl.classList.remove('hidden');
-    document.body.classList.add('logged-in');
+    showApp();
     fetchAppointments();
+    const queue = [...retryQueue];
+    retryQueue.length = 0;
+    queue.forEach(fn => fn());
   } catch (e) {
     alert('Ошибка авторизации');
   }
@@ -56,17 +93,15 @@ loginForm.onsubmit = async (e) => {
 logoutBtn.onclick = () => {
   token = null;
   currentUser = null;
-  loginEl.classList.remove('hidden');
-  appEl.classList.add('hidden');
-  document.body.classList.remove('logged-in');
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
+  showLogin();
 };
 
 async function fetchAppointments() {
   appointmentsEl.innerHTML = '';
   try {
-    const r = await fetch(`${API_URL}/api/v1/appointments/list`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
+    const r = await apiFetch(`${API_URL}/api/v1/appointments/list`);
     if (!r.ok) return;
     const d = await r.json();
     d.appointments.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
@@ -77,20 +112,22 @@ async function fetchAppointments() {
       btn.onclick = () => openAppointment(ap.appointment_id, ap.status);
       appointmentsEl.appendChild(btn);
     });
-  } catch (e) {}
+  } catch (e) {
+    if (e.message === 'unauthorized') retryQueue.push(fetchAppointments);
+  }
 }
 
-createBtn.onclick = async () => {
+createBtn.onclick = async function createAppointment() {
   try {
-    const r = await fetch(`${API_URL}/api/v1/appointments/create`, {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${token}` }
+    const r = await apiFetch(`${API_URL}/api/v1/appointments/create`, {
+      method: 'POST'
     });
     if (!r.ok) throw new Error();
     const d = await r.json();
     openAppointment(d.appointment_id, 'pending');
   } catch (e) {
-    alert('Ошибка создания приема');
+    if (e.message === 'unauthorized') retryQueue.push(createAppointment);
+    else alert('Ошибка создания приема');
   }
 };
 
@@ -112,13 +149,12 @@ async function openAppointment(id, status) {
   loadRecordings();
 }
 
-finishBtn.onclick = async () => {
+finishBtn.onclick = async function finishAppointment() {
   try {
     const fd = new FormData();
     fd.append('appointment_id', currentAppointment);
-    const r = await fetch(`${API_URL}/api/v1/appointments/finish`, {
+    const r = await apiFetch(`${API_URL}/api/v1/appointments/finish`, {
       method: 'POST',
-      headers: { 'Authorization': `Bearer ${token}` },
       body: fd
     });
     if (!r.ok) throw new Error();
@@ -126,7 +162,8 @@ finishBtn.onclick = async () => {
     controls.classList.add('hidden');
     fetchAppointments();
   } catch (e) {
-    alert('Ошибка завершения');
+    if (e.message === 'unauthorized') retryQueue.push(finishAppointment);
+    else alert('Ошибка завершения');
   }
 };
 
@@ -177,27 +214,40 @@ function uploadRecording(blob) {
   status.className = 'status';
   status.textContent = 'отправка...';
   recordingsList.prepend(status);
-  fetch(`${API_URL}/api/v1/appointments/audio/upload`, {
+  apiFetch(`${API_URL}/api/v1/appointments/audio/upload`, {
     method: 'POST',
-    headers: { 'Authorization': `Bearer ${token}` },
     body: fd
   }).then(r => r.ok ? r.json() : Promise.reject()).then(() => {
     status.remove();
     loadRecordings();
-  }).catch(() => { status.textContent = 'ошибка'; });
+  }).catch(e => {
+    if (e.message === 'unauthorized') {
+      status.textContent = 'ожидание авторизации...';
+      retryQueue.push(() => uploadRecording(blob));
+    } else {
+      status.textContent = 'ошибка';
+    }
+  });
 }
 
 async function loadRecordings() {
   recordingsList.innerHTML = '';
   audioCount = 0;
   try {
-    const r = await fetch(`${API_URL}/api/v1/appointments/audio/list?appointment_id=${currentAppointment}`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
+    const r = await apiFetch(`${API_URL}/api/v1/appointments/audio/list?appointment_id=${currentAppointment}`);
     if (!r.ok) return;
     const d = await r.json();
     d.audio_files.forEach(f => { audioCount++; addExisting(f); });
-  } catch (e) {}
+  } catch (e) {
+    if (e.message === 'unauthorized') retryQueue.push(loadRecordings);
+  }
+}
+
+async function fetchAudio(id) {
+  const r = await apiFetch(`${API_URL}/api/v1/appointments/audio/get?appointment_id=${currentAppointment}&audio_id=${id}`);
+  if (!r.ok) throw new Error();
+  const blob = await r.blob();
+  return URL.createObjectURL(blob);
 }
 
 function addExisting(f) {
@@ -225,18 +275,20 @@ function addExisting(f) {
   li.appendChild(meta);
   const audio = document.createElement('audio');
   audio.controls = true;
-  audio.src = `${API_URL}/api/v1/appointments/audio/get?appointment_id=${currentAppointment}&audio_id=${f.audio_id}`;
+  fetchAudio(f.audio_id).then(url => { audio.src = url; }).catch(e => {
+    if (e.message === 'unauthorized') retryQueue.push(loadRecordings);
+  });
   li.appendChild(audio);
   recordingsList.appendChild(li);
 }
 
 async function deleteAudio(id, el) {
   try {
-    const r = await fetch(`${API_URL}/api/v1/appointments/audio/delete?appointment_id=${currentAppointment}&audio_id=${id}`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
+    const r = await apiFetch(`${API_URL}/api/v1/appointments/audio/delete?appointment_id=${currentAppointment}&audio_id=${id}`);
     if (r.ok) el.remove();
-  } catch (e) {}
+  } catch (e) {
+    if (e.message === 'unauthorized') retryQueue.push(() => deleteAudio(id, el));
+  }
 }
 
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
