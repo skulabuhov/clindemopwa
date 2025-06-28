@@ -63,6 +63,7 @@ async function apiFetch(url, options = {}) {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     showLogin();
+    location.reload();
     throw new Error('unauthorized');
   }
   return response;
@@ -97,6 +98,7 @@ loginForm.onsubmit = async (e) => {
     const queue = [...retryQueue];
     retryQueue.length = 0;
     queue.forEach(fn => fn());
+    location.reload();
   } catch (e) {
     alert('Ошибка авторизации');
   }
@@ -108,6 +110,7 @@ logoutBtn.onclick = () => {
   localStorage.removeItem('token');
   localStorage.removeItem('user');
   showLogin();
+  location.reload();
 };
 
 async function fetchAppointments() {
@@ -173,6 +176,7 @@ finishBtn.onclick = async function finishAppointment() {
     finishBtn.classList.add('hidden');
     controls.classList.add('hidden');
     fetchAppointments();
+    location.reload();
   } catch (e) {
     if (e.message === 'unauthorized') retryQueue.push(finishAppointment);
     else alert('Ошибка завершения');
