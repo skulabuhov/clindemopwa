@@ -17,6 +17,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const controls = document.getElementById('controls');
   const recordBtn = document.getElementById('recordBtn');
   const recordingsList = document.getElementById('recordings');
+  const reportBtn = document.getElementById('reportBtn');
+  const loaderEl = document.getElementById('loader');
+  const reportDialog = document.getElementById('reportDialog');
+  const reportMainBtn = document.getElementById('reportMainBtn');
+  const reportAnamnesisBtn = document.getElementById('reportAnamnesisBtn');
 
   function translateStatus(status) {
     switch (status) {
@@ -51,6 +56,42 @@ function showLogin() {
   loginEl.classList.remove('hidden');
   appEl.classList.add('hidden');
   document.body.classList.remove('logged-in');
+}
+
+function showLoader() {
+  loaderEl.classList.remove('hidden');
+}
+
+function hideLoader() {
+  loaderEl.classList.add('hidden');
+}
+
+function showReportDialog() {
+  reportDialog.classList.remove('hidden');
+}
+
+function hideReportDialog() {
+  reportDialog.classList.add('hidden');
+}
+
+async function requestReport(type) {
+  hideReportDialog();
+  showLoader();
+  try {
+    const r = await apiFetch(`${API_URL}/api/v1/appointments/report?appointment_id=${currentAppointment}&report_type=${type}`);
+    if (!r.ok) throw new Error();
+    const blob = await r.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `report_${currentAppointment}.pdf`;
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch (e) {
+    alert('Ошибка получения отчета');
+  } finally {
+    hideLoader();
+  }
 }
 
 async function apiFetch(url, options = {}) {
@@ -320,6 +361,13 @@ async function deleteAudio(id, el) {
     if (e.message === 'unauthorized') retryQueue.push(() => deleteAudio(id, el));
   }
 }
+
+reportBtn.onclick = () => {
+  if (currentAppointment) showReportDialog();
+};
+
+reportMainBtn.onclick = () => requestReport('main');
+reportAnamnesisBtn.onclick = () => requestReport('anamnesis');
 
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
   navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' });
