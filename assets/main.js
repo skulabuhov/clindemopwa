@@ -327,7 +327,7 @@ async function loadRecordings() {
     const r = await apiFetch(`${API_URL}/api/v1/appointments/audio/list?appointment_id=${currentAppointment}`);
     if (!r.ok) return;
     const d = await r.json();
-    d.audio_files.forEach(f => {
+    d.audio_files.sort((a, b) => a.audio_id - b.audio_id).forEach(f => {
       audioCount = Math.max(audioCount, f.audio_id);
       addExisting(f);
     });
