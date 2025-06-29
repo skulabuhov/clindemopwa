@@ -120,11 +120,13 @@ async function fetchAppointments() {
     if (!r.ok) return;
     const d = await r.json();
     d.appointments.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    const total = d.appointments.length;
     d.appointments.forEach((ap, idx) => {
+      const number = total - idx;
       const btn = document.createElement('button');
       btn.className = 'secondary';
-      btn.textContent = `Прием ${idx + 1}: ${new Date(ap.created_at).toLocaleString()} - ${translateStatus(ap.status)}`;
-      btn.onclick = () => openAppointment(ap.appointment_id, ap.status, idx + 1);
+      btn.textContent = `Прием ${number}: ${new Date(ap.created_at).toLocaleString()} - ${translateStatus(ap.status)}`;
+      btn.onclick = () => openAppointment(ap.appointment_id, ap.status, number);
       appointmentsEl.appendChild(btn);
     });
   } catch (e) {
