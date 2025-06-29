@@ -110,10 +110,33 @@ async function apiFetch(url, options = {}) {
   return response;
 }
 
+async function validateToken() {
+  try {
+    const r = await fetch(`${API_URL}/api/v1/appointments/list`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    return r.ok;
+  } catch (e) {
+    return false;
+  }
+}
+
 if (token) {
-  usernameEl.textContent = currentUser || '';
-  showApp();
-  fetchAppointments();
+  showLoader();
+  validateToken().then(valid => {
+    hideLoader();
+    if (valid) {
+      usernameEl.textContent = currentUser || '';
+      showApp();
+      fetchAppointments();
+    } else {
+      token = null;
+      currentUser = null;
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      showLogin();
+    }
+  });
 }
 
 loginForm.onsubmit = async (e) => {
