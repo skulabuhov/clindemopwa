@@ -239,7 +239,7 @@ function uploadRecording(blob) {
   const status = document.createElement('span');
   status.className = 'status';
   status.textContent = 'отправка...';
-  recordingsList.prepend(status);
+  recordingsList.appendChild(status);
   apiFetch(`${API_URL}/api/v1/appointments/audio/upload`, {
     method: 'POST',
     body: fd
