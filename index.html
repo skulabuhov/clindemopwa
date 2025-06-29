@@ -32,6 +32,7 @@
         <div id="appointment" class="hidden">
             <button id="backBtn" class="secondary">Назад</button>
             <button id="finishBtn" class="secondary hidden">Завершить прием</button>
+            <button id="reportBtn" class="primary">Создать отчет</button>
             <h2 id="appointmentTitle"></h2>
             <div id="controls" class="hidden">
                 <button id="recordBtn" class="primary record-btn">Запись</button>
@@ -40,6 +41,14 @@
         </div>
     </div>
 </div>
-<script src="assets/main.js"></script>
+    <div id="loader" class="hidden">Загрузка...</div>
+    <div id="reportDialog" class="dialog hidden">
+        <div class="dialog-content">
+            <p>Выберите тип отчета</p>
+            <button id="reportMainBtn" class="primary">Общий отчет</button>
+            <button id="reportAnamnesisBtn" class="primary">Анамнез</button>
+        </div>
+    </div>
+    <script src="assets/main.js"></script>
 </body>
 </html>
