@@ -24,8 +24,9 @@ audio{width:100%}
 .status{font-size:0.8em;color:#666}
 #controls{position:sticky;top:0;background:#fff;z-index:1}
 .transcript{font-size:0.9em;margin-top:5px;color:#333}
-#loader, .dialog{position:fixed;top:0;left:0;width:100vw;height:100vh;display:flex;justify-content:center;align-items:center;z-index:1000}
+.dialog,#loader{position:fixed;top:0;left:0;width:100vw;height:100vh;display:flex;justify-content:center;align-items:center;z-index:1000}
 #loader{background:rgba(0,0,0,.5);color:#fff;font-size:1.2em}
 .dialog{background:rgba(0,0,0,.5)}
+.dialog.hidden,#loader.hidden{display:none}
 .dialog-content{background:#fff;padding:20px;border-radius:8px;text-align:center}
 .dialog-content button{width:auto;margin:5px}
