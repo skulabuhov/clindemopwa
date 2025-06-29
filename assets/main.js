@@ -231,7 +231,9 @@ recordBtn.addEventListener('pointerup', e => {
 
 function uploadRecording(blob) {
   const fd = new FormData();
-  fd.append('number', audioCount + 1);
+  const number = audioCount + 1;
+  audioCount = number;
+  fd.append('number', number);
   fd.append('appointment_id', currentAppointment);
   fd.append('file', blob, `audio_${Date.now()}.webm`);
   const status = document.createElement('span');
@@ -261,7 +263,10 @@ async function loadRecordings() {
     const r = await apiFetch(`${API_URL}/api/v1/appointments/audio/list?appointment_id=${currentAppointment}`);
     if (!r.ok) return;
     const d = await r.json();
-    d.audio_files.forEach(f => { audioCount++; addExisting(f); });
+    d.audio_files.forEach(f => {
+      audioCount = Math.max(audioCount, f.audio_id);
+      addExisting(f);
+    });
   } catch (e) {
     if (e.message === 'unauthorized') retryQueue.push(loadRecordings);
   }
