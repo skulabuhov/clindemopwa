@@ -331,6 +331,7 @@ async function loadRecordings() {
       audioCount = Math.max(audioCount, f.audio_id);
       addExisting(f);
     });
+    recordingsList.scrollTop = recordingsList.scrollHeight;
   } catch (e) {
     if (e.message === 'unauthorized') retryQueue.push(loadRecordings);
   }
