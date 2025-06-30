@@ -1,5 +1,16 @@
 const API_URL = 'https://cdemo.fatdog.pro';
 
+function getSupportedMimeType() {
+  const types = [
+    'audio/webm;codecs=opus',
+    'audio/webm',
+    'audio/mp4',
+    'audio/aac',
+    'audio/mpeg'
+  ];
+  return types.find(t => MediaRecorder.isTypeSupported(t)) || '';
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   const loginEl = document.getElementById('login');
   const appEl = document.getElementById('app');
@@ -257,13 +268,16 @@ finishBtn.onclick = async function finishAppointment() {
 
 function startRecording() {
   navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
-    recorder = new MediaRecorder(stream);
+    const mimeType = getSupportedMimeType();
+    recorder = new MediaRecorder(stream, { mimeType });
+
     recorder.ondataavailable = e => { chunks.push(e.data); };
     recorder.onstop = () => {
-      const blob = new Blob(chunks, { type: 'audio/webm' });
+      const blob = new Blob(chunks, { type: recorder.mimeType });
       chunks = [];
       uploadRecording(blob);
     };
+
     recorder.start();
     isRecording = true;
     recordBtn.textContent = 'Стоп';
