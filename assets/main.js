@@ -59,6 +59,7 @@ const retryQueue = [];
 let audioPollInterval = null;
 let lastAudioSnapshot = null;
 
+
 function showApp() {
   loginEl.classList.add('hidden');
   appEl.classList.remove('hidden');
