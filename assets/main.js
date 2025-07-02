@@ -57,6 +57,8 @@ let isRecording = false;
 let holdTimer = null;
 const retryQueue = [];
 let audioPollInterval = null;
+let lastAudioSnapshot = null;
+
 
 function showApp() {
   loginEl.classList.add('hidden');
@@ -339,26 +341,46 @@ function uploadRecording(blob) {
   });
 }
 
-async function loadRecordings() {
+function renderRecordings(files) {
   recordingsList.innerHTML = '';
   audioCount = 0;
+  files.sort((a, b) => a.audio_id - b.audio_id).forEach(f => {
+    audioCount = Math.max(audioCount, f.audio_id);
+    addExisting(f);
+  });
+  recordingsList.scrollTop = recordingsList.scrollHeight;
+}
+
+async function loadRecordings() {
   try {
     const r = await apiFetch(`${API_URL}/api/v1/appointments/audio/list?appointment_id=${currentAppointment}`);
     if (!r.ok) return;
     const d = await r.json();
-    d.audio_files.sort((a, b) => a.audio_id - b.audio_id).forEach(f => {
-      audioCount = Math.max(audioCount, f.audio_id);
-      addExisting(f);
-    });
-    recordingsList.scrollTop = recordingsList.scrollHeight;
+    renderRecordings(d.audio_files);
+    lastAudioSnapshot = JSON.stringify(d.audio_files);
   } catch (e) {
     if (e.message === 'unauthorized') retryQueue.push(loadRecordings);
   }
 }
 
+async function checkAudioUpdates() {
+  try {
+    const r = await apiFetch(`${API_URL}/api/v1/appointments/audio/list?appointment_id=${currentAppointment}`);
+    if (!r.ok) return;
+    const d = await r.json();
+    const snapshot = JSON.stringify(d.audio_files);
+    if (snapshot !== lastAudioSnapshot) {
+      lastAudioSnapshot = snapshot;
+      renderRecordings(d.audio_files);
+    }
+  } catch (e) {
+    if (e.message === 'unauthorized') retryQueue.push(checkAudioUpdates);
+  }
+}
+
 function startAudioPolling() {
   stopAudioPolling();
-  audioPollInterval = setInterval(loadRecordings, 5000);
+  audioPollInterval = setInterval(checkAudioUpdates, 5000);
 }
 
 function stopAudioPolling() {
