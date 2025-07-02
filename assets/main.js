@@ -56,6 +56,7 @@ let audioCount = 0;
 let isRecording = false;
 let holdTimer = null;
 const retryQueue = [];
+let audioPollInterval = null;
 
 function showApp() {
   loginEl.classList.add('hidden');
@@ -180,6 +181,7 @@ loginForm.onsubmit = async (e) => {
 };
 
 logoutBtn.onclick = () => {
+  stopAudioPolling();
   token = null;
   currentUser = null;
   localStorage.removeItem('token');
@@ -224,6 +226,7 @@ createBtn.onclick = async function createAppointment() {
 };
 
 backBtn.onclick = () => {
+  stopAudioPolling();
   appointmentEl.classList.add('hidden');
   appointmentsEl.classList.remove('hidden');
   createBtn.classList.remove('hidden');
@@ -245,6 +248,7 @@ async function openAppointment(id, status, number = null) {
   finishBtn.classList.toggle('hidden', status === 'finished');
   controls.classList.toggle('hidden', status === 'finished');
   loadRecordings();
+  startAudioPolling();
 }
 
 finishBtn.onclick = async function finishAppointment() {
@@ -258,6 +262,7 @@ finishBtn.onclick = async function finishAppointment() {
     if (!r.ok) throw new Error();
     finishBtn.classList.add('hidden');
     controls.classList.add('hidden');
+    stopAudioPolling();
     fetchAppointments();
     location.reload();
   } catch (e) {
@@ -348,6 +353,18 @@ async function loadRecordings() {
     recordingsList.scrollTop = recordingsList.scrollHeight;
   } catch (e) {
     if (e.message === 'unauthorized') retryQueue.push(loadRecordings);
+  }
+}
+
+function startAudioPolling() {
+  stopAudioPolling();
+  audioPollInterval = setInterval(loadRecordings, 5000);
+}
+
+function stopAudioPolling() {
+  if (audioPollInterval) {
+    clearInterval(audioPollInterval);
+    audioPollInterval = null;
   }
 }
 
