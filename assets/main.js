@@ -11,6 +11,22 @@ function getSupportedMimeType() {
   return types.find(t => MediaRecorder.isTypeSupported(t)) || '';
 }
 
+function getExtension(mimeType) {
+  switch (mimeType) {
+    case 'audio/webm;codecs=opus':
+    case 'audio/webm':
+      return 'webm';
+    case 'audio/mp4':
+      return 'mp4';
+    case 'audio/aac':
+      return 'aac';
+    case 'audio/mpeg':
+      return 'mp3';
+    default:
+      return 'webm';
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   const loginEl = document.getElementById('login');
   const appEl = document.getElementById('app');
@@ -282,7 +298,7 @@ function startRecording() {
     recorder.onstop = () => {
       const blob = new Blob(chunks, { type: recorder.mimeType });
       chunks = [];
-      uploadRecording(blob);
+      uploadRecording(blob, recorder.mimeType);
     };
 
     recorder.start();
@@ -314,13 +330,14 @@ recordBtn.addEventListener('pointerup', e => {
   }
 });
 
-function uploadRecording(blob) {
+function uploadRecording(blob, mimeType) {
   const fd = new FormData();
   const number = audioCount + 1;
   audioCount = number;
   fd.append('number', number);
   fd.append('appointment_id', currentAppointment);
-  fd.append('file', blob, `audio_${Date.now()}.webm`);
+  const ext = getExtension(mimeType);
+  fd.append('file', blob, `audio_${Date.now()}.${ext}`);
   const status = document.createElement('span');
   status.className = 'status';
   status.textContent = 'отправка...';
