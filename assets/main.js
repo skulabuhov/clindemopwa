@@ -359,6 +359,7 @@ function uploadRecording(blob, mimeType) {
   status.className = 'status';
   status.textContent = 'отправка...';
   recordingsList.appendChild(status);
+  recordingsList.scrollTop = recordingsList.scrollHeight;
   apiFetch(`${API_URL}/api/v1/appointments/audio/upload`, {
     method: 'POST',
     body: fd
