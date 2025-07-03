@@ -74,6 +74,8 @@ let holdTimer = null;
 const retryQueue = [];
 let audioPollInterval = null;
 let lastAudioSnapshot = null;
+let appointmentsPollInterval = null;
+let lastAppointmentsSnapshot = null;
 
 
 function showApp() {
@@ -206,6 +208,7 @@ loginForm.onsubmit = async (e) => {
 
 logoutBtn.onclick = () => {
   stopAudioPolling();
+  stopAppointmentsPolling();
   token = null;
   currentUser = null;
   localStorage.removeItem('token');
@@ -214,6 +217,19 @@ logoutBtn.onclick = () => {
   location.reload();
 };
 
+function renderAppointments(apps) {
+  appointmentsEl.innerHTML = '';
+  const total = apps.length;
+  apps.forEach((ap, idx) => {
+    const number = total - idx;
+    const btn = document.createElement('button');
+    btn.className = 'secondary';
+    btn.textContent = `Прием ${number}: ${new Date(ap.created_at).toLocaleString()} - ${translateStatus(ap.status)}`;
+    btn.onclick = () => openAppointment(ap.appointment_id, ap.status, number);
+    appointmentsEl.appendChild(btn);
+  });
+}
+
 async function fetchAppointments() {
   appointmentsEl.innerHTML = '';
   try {
@@ -221,15 +237,9 @@ async function fetchAppointments() {
     if (!r.ok) return;
     const d = await r.json();
     d.appointments.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-    const total = d.appointments.length;
-    d.appointments.forEach((ap, idx) => {
-      const number = total - idx;
-      const btn = document.createElement('button');
-      btn.className = 'secondary';
-      btn.textContent = `Прием ${number}: ${new Date(ap.created_at).toLocaleString()} - ${translateStatus(ap.status)}`;
-      btn.onclick = () => openAppointment(ap.appointment_id, ap.status, number);
-      appointmentsEl.appendChild(btn);
-    });
+    renderAppointments(d.appointments);
+    lastAppointmentsSnapshot = JSON.stringify(d.appointments);
+    startAppointmentsPolling();
   } catch (e) {
     if (e.message === 'unauthorized') retryQueue.push(fetchAppointments);
   }
@@ -271,6 +281,7 @@ async function openAppointment(id, status, number = null) {
   appointmentEl.classList.remove('hidden');
   finishBtn.classList.toggle('hidden', status === 'finished');
   controls.classList.toggle('hidden', status === 'finished');
+  stopAppointmentsPolling();
   loadRecordings();
   startAudioPolling();
 }
@@ -403,13 +414,41 @@ async function checkAudioUpdates() {
 
 function startAudioPolling() {
   stopAudioPolling();
-  audioPollInterval = setInterval(checkAudioUpdates, 5000);
+  audioPollInterval = setInterval(checkAudioUpdates, 500);
 }
 
 function stopAudioPolling() {
   if (audioPollInterval) {
     clearInterval(audioPollInterval);
     audioPollInterval = null;
+  }
+}
+
+async function checkAppointmentsUpdates() {
+  try {
+    const r = await apiFetch(`${API_URL}/api/v1/appointments/list`);
+    if (!r.ok) return;
+    const d = await r.json();
+    d.appointments.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    const snapshot = JSON.stringify(d.appointments);
+    if (snapshot !== lastAppointmentsSnapshot) {
+      lastAppointmentsSnapshot = snapshot;
+      renderAppointments(d.appointments);
+    }
+  } catch (e) {
+    if (e.message === 'unauthorized') retryQueue.push(checkAppointmentsUpdates);
+  }
+}
+
+function startAppointmentsPolling() {
+  stopAppointmentsPolling();
+  appointmentsPollInterval = setInterval(checkAppointmentsUpdates, 500);
+}
+
+function stopAppointmentsPolling() {
+  if (appointmentsPollInterval) {
+    clearInterval(appointmentsPollInterval);
+    appointmentsPollInterval = null;
   }
 }
 
