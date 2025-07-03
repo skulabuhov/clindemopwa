@@ -49,8 +49,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const reportDialog = document.getElementById('reportDialog');
   const reportMainBtn = document.getElementById('reportMainBtn');
   const reportAnamnesisBtn = document.getElementById('reportAnamnesisBtn');
-  const reportReadyDialog = document.getElementById('reportReadyDialog');
-  const reportDownloadLink = document.getElementById('reportDownloadLink');
 
   function translateStatus(status) {
     switch (status) {
@@ -106,14 +104,6 @@ function hideReportDialog() {
   reportDialog.classList.add('hidden');
 }
 
-function showReportReadyDialog(url) {
-  reportDownloadLink.href = url;
-  reportReadyDialog.classList.remove('hidden');
-}
-
-function hideReportReadyDialog() {
-  reportReadyDialog.classList.add('hidden');
-}
 
 async function requestReport(type) {
   hideReportDialog();
@@ -121,9 +111,9 @@ async function requestReport(type) {
   try {
     const r = await apiFetch(`${API_URL}/api/v1/appointments/report?appointment_id=${currentAppointment}&report_type=${type}`);
     if (!r.ok) throw new Error();
-    const d = await r.json();
-    if (!d.report_url) throw new Error();
-    showReportReadyDialog(d.report_url);
+    const blob = await r.blob();
+    const url = URL.createObjectURL(blob);
+    window.open(url, '_blank');
   } catch (e) {
     alert('Ошибка получения отчета');
   } finally {
@@ -469,7 +459,6 @@ reportBtn.onclick = () => {
 
 reportMainBtn.onclick = () => requestReport('main');
 reportAnamnesisBtn.onclick = () => requestReport('anamnesis');
-reportDownloadLink.onclick = () => hideReportReadyDialog();
 
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
   navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' });
