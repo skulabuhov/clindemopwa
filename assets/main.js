@@ -110,14 +110,15 @@ function hideReportDialog() {
 async function requestReport(type) {
   hideReportDialog();
 
+  // Страница загрузки в текущем окне
   const win = window.open('', '_blank');
   if (!win) return alert('Не удалось открыть новое окно');
 
-  // Шаблон страницы загрузки
   win.document.write(`
     <html>
       <head>
         <title>Загрузка отчета...</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
           body {
             margin: 0;
@@ -130,6 +131,7 @@ async function requestReport(type) {
             align-items: center;
             height: 100vh;
             flex-direction: column;
+            text-align: center;
           }
           .spinner {
             border: 8px solid rgba(255, 255, 255, 0.1);
@@ -138,33 +140,42 @@ async function requestReport(type) {
             width: 80px;
             height: 80px;
             animation: spin 1s linear infinite;
-            margin-bottom: 20px;
+            margin-bottom: 24px;
           }
           @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
           }
           .text {
-            font-size: 18px;
-            opacity: 0.8;
+            font-size: 22px;
+            line-height: 1.4;
+            opacity: 0.9;
+            max-width: 90%;
           }
         </style>
       </head>
       <body>
         <div class="spinner"></div>
-        <div class="text">Формируем отчет, пожалуйста, подождите...</div>
+        <div class="text">Формируем отчет,<br>пожалуйста, подождите...</div>
       </body>
     </html>
   `);
-  win.document.close(); // важно, чтобы стили применились
+  win.document.close();
 
   showLoader();
   try {
     const r = await apiFetch(`${API_URL}/api/v1/appointments/report?appointment_id=${currentAppointment}&report_type=${type}`);
     if (!r.ok) throw new Error('Ошибка загрузки отчета');
+
     const blob = await r.blob();
     const url = URL.createObjectURL(blob);
-    win.location.href = url;
+
+    // новое окно для PDF — без лишнего HTML
+    const pdfWin = window.open(url, '_blank');
+    if (!pdfWin) alert('PDF не удалось открыть');
+
+    // закрываем окно загрузки
+    win.close();
   } catch (e) {
     win.close();
     alert('Ошибка получения отчета');
