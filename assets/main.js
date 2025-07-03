@@ -109,23 +109,64 @@ function hideReportDialog() {
 
 async function requestReport(type) {
   hideReportDialog();
+
   const win = window.open('', '_blank');
-  if (win) {
-    win.document.write('Пожалуйста, подождите...');
-  }
+  if (!win) return alert('Не удалось открыть новое окно');
+
+  // Шаблон страницы загрузки
+  win.document.write(`
+    <html>
+      <head>
+        <title>Загрузка отчета...</title>
+        <style>
+          body {
+            margin: 0;
+            padding: 0;
+            background-color: #121212;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+          }
+          .spinner {
+            border: 8px solid rgba(255, 255, 255, 0.1);
+            border-top: 8px solid #00bcd4;
+            border-radius: 50%;
+            width: 80px;
+            height: 80px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+          }
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+          .text {
+            font-size: 18px;
+            opacity: 0.8;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="spinner"></div>
+        <div class="text">Формируем отчет, пожалуйста, подождите...</div>
+      </body>
+    </html>
+  `);
+  win.document.close(); // важно, чтобы стили применились
+
   showLoader();
   try {
     const r = await apiFetch(`${API_URL}/api/v1/appointments/report?appointment_id=${currentAppointment}&report_type=${type}`);
-    if (!r.ok) throw new Error();
+    if (!r.ok) throw new Error('Ошибка загрузки отчета');
     const blob = await r.blob();
     const url = URL.createObjectURL(blob);
-    if (win) {
-      win.location.href = url;
-    } else {
-      window.open(url, '_blank');
-    }
+    win.location.href = url;
   } catch (e) {
-    if (win) win.close();
+    win.close();
     alert('Ошибка получения отчета');
   } finally {
     hideLoader();
