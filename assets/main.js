@@ -110,10 +110,10 @@ function hideReportDialog() {
 async function requestReport(type) {
   hideReportDialog();
 
-  // Страница загрузки в текущем окне
   const win = window.open('', '_blank');
   if (!win) return alert('Не удалось открыть новое окно');
 
+  // Шаблон страницы загрузки с белым фоном и тёмно-серым текстом
   win.document.write(`
     <html>
       <head>
@@ -123,8 +123,8 @@ async function requestReport(type) {
           body {
             margin: 0;
             padding: 0;
-            background-color: #121212;
-            color: #fff;
+            background-color: #ffffff;
+            color: #333333;
             font-family: Arial, sans-serif;
             display: flex;
             justify-content: center;
@@ -134,8 +134,8 @@ async function requestReport(type) {
             text-align: center;
           }
           .spinner {
-            border: 8px solid rgba(255, 255, 255, 0.1);
-            border-top: 8px solid #00bcd4;
+            border: 8px solid rgba(0, 0, 0, 0.1);
+            border-top: 8px solid #3498db;
             border-radius: 50%;
             width: 80px;
             height: 80px;
@@ -149,7 +149,7 @@ async function requestReport(type) {
           .text {
             font-size: 22px;
             line-height: 1.4;
-            opacity: 0.9;
+            opacity: 0.95;
             max-width: 90%;
           }
         </style>
@@ -166,16 +166,9 @@ async function requestReport(type) {
   try {
     const r = await apiFetch(`${API_URL}/api/v1/appointments/report?appointment_id=${currentAppointment}&report_type=${type}`);
     if (!r.ok) throw new Error('Ошибка загрузки отчета');
-
     const blob = await r.blob();
     const url = URL.createObjectURL(blob);
-
-    // новое окно для PDF — без лишнего HTML
-    const pdfWin = window.open(url, '_blank');
-    if (!pdfWin) alert('PDF не удалось открыть');
-
-    // закрываем окно загрузки
-    win.close();
+    win.location.href = url;
   } catch (e) {
     win.close();
     alert('Ошибка получения отчета');
