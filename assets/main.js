@@ -112,10 +112,18 @@ async function requestReport(type) {
     if (!r.ok) throw new Error();
     const blob = await r.blob();
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `report_${currentAppointment}.pdf`;
-    a.click();
+    const isIOS = /iP(hone|od|ad)/.test(navigator.platform);
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    if (isIOS && isSafari) {
+      window.open(url, '_blank');
+    } else {
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `report_${currentAppointment}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }
     URL.revokeObjectURL(url);
   } catch (e) {
     alert('Ошибка получения отчета');
