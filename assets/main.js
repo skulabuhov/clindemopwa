@@ -111,20 +111,25 @@ async function requestReport(type) {
     const r = await apiFetch(`${API_URL}/api/v1/appointments/report?appointment_id=${currentAppointment}&report_type=${type}`);
     if (!r.ok) throw new Error();
     const blob = await r.blob();
-    const url = URL.createObjectURL(blob);
     const isIOS = /iP(hone|od|ad)/.test(navigator.platform);
     const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
     if (isIOS && isSafari) {
-      window.open(url, '_blank');
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const dataUrl = reader.result;
+        window.open(dataUrl, '_blank');
+      };
+      reader.readAsDataURL(blob);
     } else {
+      const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = `report_${currentAppointment}.pdf`;
       document.body.appendChild(a);
       a.click();
       a.remove();
+      URL.revokeObjectURL(url);
     }
-    URL.revokeObjectURL(url);
   } catch (e) {
     alert('Ошибка получения отчета');
   } finally {
