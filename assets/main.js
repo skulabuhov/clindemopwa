@@ -107,14 +107,23 @@ function hideReportDialog() {
 
 async function requestReport(type) {
   hideReportDialog();
+  const win = window.open('', '_blank');
+  if (win) {
+    win.document.write('Пожалуйста, подождите...');
+  }
   showLoader();
   try {
     const r = await apiFetch(`${API_URL}/api/v1/appointments/report?appointment_id=${currentAppointment}&report_type=${type}`);
     if (!r.ok) throw new Error();
     const blob = await r.blob();
     const url = URL.createObjectURL(blob);
-    window.open(url, '_blank');
+    if (win) {
+      win.location.href = url;
+    } else {
+      window.open(url, '_blank');
+    }
   } catch (e) {
+    if (win) win.close();
     alert('Ошибка получения отчета');
   } finally {
     hideLoader();
