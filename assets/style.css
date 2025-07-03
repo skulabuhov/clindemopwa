@@ -31,6 +31,7 @@ audio{width:100%}
 .dialog.hidden,#loader.hidden{display:none}
 .dialog-content{background:#fff;padding:20px;border-radius:8px;text-align:center}
 .dialog-content button{width:auto;margin:5px}
+.dialog-content a{display:inline-block;margin:5px;color:#6200ee;text-decoration:underline}
 #app{display:flex;flex-direction:column;flex:1;overflow: hidden}
 #appointment{display:flex;flex-direction:column;flex:1;overflow: hidden}
 #navRow{display:flex;gap:10px}

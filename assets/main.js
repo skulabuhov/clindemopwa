@@ -49,6 +49,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const reportDialog = document.getElementById('reportDialog');
   const reportMainBtn = document.getElementById('reportMainBtn');
   const reportAnamnesisBtn = document.getElementById('reportAnamnesisBtn');
+  const reportReadyDialog = document.getElementById('reportReadyDialog');
+  const reportDownloadLink = document.getElementById('reportDownloadLink');
 
   function translateStatus(status) {
     switch (status) {
@@ -104,32 +106,24 @@ function hideReportDialog() {
   reportDialog.classList.add('hidden');
 }
 
+function showReportReadyDialog(url) {
+  reportDownloadLink.href = url;
+  reportReadyDialog.classList.remove('hidden');
+}
+
+function hideReportReadyDialog() {
+  reportReadyDialog.classList.add('hidden');
+}
+
 async function requestReport(type) {
   hideReportDialog();
   showLoader();
   try {
     const r = await apiFetch(`${API_URL}/api/v1/appointments/report?appointment_id=${currentAppointment}&report_type=${type}`);
     if (!r.ok) throw new Error();
-    const blob = await r.blob();
-    const isIOS = /iP(hone|od|ad)/.test(navigator.platform);
-    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-    if (isIOS && isSafari) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const dataUrl = reader.result;
-        window.open(dataUrl, '_blank');
-      };
-      reader.readAsDataURL(blob);
-    } else {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `report_${currentAppointment}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-    }
+    const d = await r.json();
+    if (!d.report_url) throw new Error();
+    showReportReadyDialog(d.report_url);
   } catch (e) {
     alert('Ошибка получения отчета');
   } finally {
@@ -475,6 +469,7 @@ reportBtn.onclick = () => {
 
 reportMainBtn.onclick = () => requestReport('main');
 reportAnamnesisBtn.onclick = () => requestReport('anamnesis');
+reportDownloadLink.onclick = () => hideReportReadyDialog();
 
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
   navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' });
